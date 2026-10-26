@@ -89,18 +89,12 @@ class Admin {
 			),
 			array( 'a' => array( 'href' => true ) )
 		) . '</li>';
-		echo '<li>' . esc_html__( 'In Terminal, turn your username and that password into a key:', 'signal-flare' ) . '<pre class="sf-code">printf \'' . esc_html( $user->user_login ) . ':PASTE PASSWORD HERE\' | base64</pre></li>';
-		echo '<li>' . esc_html__( 'Save the key as SIGNAL_FLARE_AUTH, and add this server to your project\'s .mcp.json:', 'signal-flare' );
-		$config = array(
-			'mcpServers' => array(
-				'signal-flare' => array(
-					'type'    => 'http',
-					'url'     => Server::url(),
-					'headers' => array( 'Authorization' => 'Basic ${SIGNAL_FLARE_AUTH}' ),
-				),
-			),
-		);
-		echo '<pre class="sf-code">' . esc_html( (string) wp_json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) ) . '</pre></li>';
+		// The password is read with a hidden prompt, so it never shows on screen or lands in shell history.
+		$command = "read -rs \"pw?Application password: \" && echo && claude mcp add --transport http --scope user signal-flare "
+			. Server::url()
+			. " --header \"Authorization: Basic \$(printf '%s:%s' '" . $user->user_login . "' \"\$pw\" | base64)\"; unset pw";
+		echo '<li>' . esc_html__( 'On your Mac, paste this into Terminal and press Return. When it asks, paste the password and press Return again (it stays hidden):', 'signal-flare' ) . '<pre class="sf-code">' . esc_html( $command ) . '</pre></li>';
+		echo '<li>' . esc_html__( 'Start a new Claude session. Signal Flare\'s tools appear automatically.', 'signal-flare' ) . '</li>';
 		echo '</ol><p class="sf-muted">' . esc_html__( 'To cut Claude off instantly, switch Signal Flare off or revoke the Application Password.', 'signal-flare' ) . '</p></section>';
 
 		echo '</div>';
