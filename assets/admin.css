@@ -1,0 +1,269 @@
+/* Signal Flare admin, in the Field Mark palette. */
+
+.sf-admin {
+	--sf-ink: #23251A;
+	--sf-text: #2a2d31;
+	--sf-muted: #6b6f76;
+	--sf-line: #e3e1dc;
+	--sf-bg: #fbfaf7;
+	--sf-olive: #4F5431;
+	--sf-olive-hover: #5E643B;
+	--sf-rust: #B4532F;
+	--sf-on: #2f7d4f;
+	max-width: 1100px;
+	color: var(--sf-text);
+	font-size: 14px;
+}
+
+.sf-admin *,
+.sf-admin *::before,
+.sf-admin *::after {
+	box-sizing: border-box;
+}
+
+.sf-header {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin: 18px 0 24px;
+}
+
+.sf-header__brand {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.sf-header__brand img {
+	width: 30px;
+	height: auto;
+}
+
+.sf-header h1 {
+	margin: 0;
+	padding: 0;
+	font-size: 26px;
+	font-weight: 600;
+	color: var(--sf-ink);
+}
+
+.sf-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+	gap: 20px;
+	margin-bottom: 20px;
+}
+
+.sf-card {
+	padding: 20px 22px;
+	border: 1px solid var(--sf-line);
+	border-radius: 12px;
+	background: #fff;
+}
+
+.sf-card h2 {
+	margin: 0 0 16px;
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--sf-muted);
+}
+
+.sf-muted {
+	color: var(--sf-muted);
+}
+
+.sf-notice {
+	margin: 0 0 16px;
+	padding: 10px 14px;
+	border-radius: 8px;
+	background: #e4f1e8;
+	color: var(--sf-on);
+	font-weight: 500;
+}
+
+.sf-pill {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 999px;
+	background: #efede8;
+	color: var(--sf-muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.sf-pill--on {
+	background: #e4f1e8;
+	color: var(--sf-on);
+}
+
+.sf-pill--error {
+	background: #f6e3dc;
+	color: #9a3a1c;
+}
+
+/* ---------- Toggles ---------- */
+
+.sf-toggle {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	margin-bottom: 18px;
+	cursor: pointer;
+}
+
+.sf-toggle input {
+	position: absolute;
+	opacity: 0;
+	width: 1px;
+	height: 1px;
+}
+
+.sf-toggle__switch {
+	flex: none;
+	position: relative;
+	width: 40px;
+	height: 24px;
+	margin-top: 1px;
+	border-radius: 999px;
+	background: #cfccc5;
+	transition: background-color 0.15s;
+}
+
+.sf-toggle__switch::after {
+	content: "";
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #fff;
+	transition: transform 0.15s;
+}
+
+.sf-toggle input:checked + .sf-toggle__switch {
+	background: var(--sf-rust);
+}
+
+.sf-toggle input:checked + .sf-toggle__switch::after {
+	transform: translateX(16px);
+}
+
+.sf-toggle input:focus-visible + .sf-toggle__switch {
+	outline: 2px solid var(--sf-rust);
+	outline-offset: 2px;
+}
+
+.sf-toggle strong {
+	display: block;
+	color: var(--sf-ink);
+}
+
+.sf-toggle small {
+	display: block;
+	margin-top: 2px;
+	color: var(--sf-muted);
+	font-size: 13px;
+}
+
+/* ---------- Buttons ---------- */
+
+.sf-button {
+	display: inline-flex;
+	align-items: center;
+	min-height: 36px;
+	padding: 0 16px;
+	border: 1px solid var(--sf-line);
+	border-radius: 8px;
+	background: #fff;
+	color: var(--sf-ink);
+	font-weight: 500;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.sf-button--primary {
+	background: var(--sf-olive);
+	border-color: var(--sf-olive);
+	color: #fff;
+}
+
+.sf-button--primary:hover {
+	background: var(--sf-olive-hover);
+	color: #fff;
+}
+
+.sf-button:focus-visible {
+	outline: 2px solid var(--sf-rust);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+/* ---------- Connect ---------- */
+
+.sf-steps {
+	margin: 0 0 12px 18px;
+}
+
+.sf-steps li {
+	margin-bottom: 14px;
+}
+
+.sf-warning {
+	color: #9a3a1c;
+	font-weight: 500;
+}
+
+.sf-code {
+	margin: 8px 0 0;
+	padding: 10px 12px;
+	border-radius: 8px;
+	background: var(--sf-ink);
+	color: #EFE7D1;
+	font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+/* ---------- Activity ---------- */
+
+.sf-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.sf-table th {
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--sf-line);
+	color: var(--sf-muted);
+	font-size: 12px;
+	font-weight: 600;
+	text-align: left;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.sf-table td {
+	padding: 10px;
+	border-bottom: 1px solid var(--sf-line);
+	vertical-align: top;
+}
+
+.sf-table summary {
+	cursor: pointer;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 12px;
+}
+
+.sf-nowrap {
+	white-space: nowrap;
+}
+
+.sf-pager {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 14px;
+}
