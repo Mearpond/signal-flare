@@ -23,7 +23,7 @@ class Health {
 		global $wpdb;
 		$checks = array(
 			'php'           => array( version_compare( PHP_VERSION, '8.0', '>=' ), 'PHP 8.0 or newer (this site has ' . PHP_VERSION . ')' ),
-			'app_passwords' => array( wp_is_application_passwords_available(), 'Application Passwords are available (Claude logs in with one)' ),
+			'app_passwords' => array( self::app_passwords_available(), 'Application Passwords are available (Claude logs in with one)' ),
 			'endpoint'      => array( self::endpoint_registered(), 'The Signal Flare connection address is registered' ),
 			'log'           => array( Log::table() === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', Log::table() ) ), 'The activity log table exists' ), // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			'signatures'    => array( function_exists( 'sodium_crypto_sign_verify_detached' ), 'PHP can check update signatures (sodium)' ),
@@ -56,6 +56,16 @@ class Health {
 	/** Labels of failed checks. */
 	public static function failed( array $result ): array {
 		return array_values( wp_list_pluck( array_filter( $result['checks'], static fn( $c ) => ! $c['ok'] ), 'label' ) );
+	}
+
+	/**
+	 * wp_is_application_passwords_available() asks whether *this request* is HTTPS,
+	 * which is never true in cron or WP-CLI. Judge by the site's address instead,
+	 * and still honour anything (like a security plugin) that switches them off.
+	 */
+	private static function app_passwords_available(): bool {
+		$supported = 'https' === wp_parse_url( home_url(), PHP_URL_SCHEME ) || 'local' === wp_get_environment_type();
+		return $supported && (bool) apply_filters( 'wp_is_application_passwords_available', true );
 	}
 
 	private static function endpoint_registered(): bool {

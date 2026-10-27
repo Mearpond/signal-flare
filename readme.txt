@@ -1,7 +1,7 @@
 === Signal Flare ===
 Requires at least: 6.5
 Requires PHP: 8.0
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 License: GPL-2.0-or-later
 
 Connects Claude to this site over MCP so it can build and maintain it. Full access, admins only, every action logged.
