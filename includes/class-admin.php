@@ -16,6 +16,72 @@ class Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
 		add_action( 'admin_post_signal_flare_save', array( __CLASS__, 'save' ) );
+		add_action( 'admin_post_signal_flare_tower', array( __CLASS__, 'save_tower' ) );
+	}
+
+	public static function save_tower(): void {
+		if ( ! current_user_can( Settings::capability() ) ) {
+			wp_die( esc_html__( 'You are not allowed to do that.', 'signal-flare' ), 403 );
+		}
+		check_admin_referer( 'signal_flare_tower' );
+		$do      = sanitize_key( wp_unslash( $_POST['do'] ?? '' ) );
+		$message = '';
+		if ( 'connect' === $do ) {
+			try {
+				Reporter::connect( sanitize_text_field( wp_unslash( $_POST['code'] ?? '' ) ) );
+				$result  = Reporter::send();
+				$message = $result['ok'] ? __( 'Connected. This site has checked in with Signal Tower.', 'signal-flare' ) : __( 'Saved, but the first check-in failed: ', 'signal-flare' ) . $result['message'];
+			} catch ( \RuntimeException $e ) {
+				$message = $e->getMessage();
+			}
+		} elseif ( 'send' === $do ) {
+			$result  = Reporter::send();
+			$message = $result['ok'] ? __( 'Checked in.', 'signal-flare' ) : __( 'Check-in failed: ', 'signal-flare' ) . $result['message'];
+		} elseif ( 'disconnect' === $do ) {
+			Reporter::disconnect();
+			$message = __( 'Disconnected from Signal Tower.', 'signal-flare' );
+		}
+		Log::add( 'tower_settings', (string) wp_json_encode( array( 'do' => $do ) ), 'ok', '', 0 );
+		set_transient( 'signal_flare_tower_notice_' . get_current_user_id(), $message, MINUTE_IN_SECONDS );
+		wp_safe_redirect( add_query_arg( array( 'page' => self::SLUG ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	private static function render_tower(): void {
+		$settings = Reporter::settings();
+		$health   = Health::run();
+		echo '<section class="sf-card"><h2>' . esc_html__( 'Signal Tower', 'signal-flare' ) . '</h2>';
+
+		$form = static function ( string $do, string $label, string $class = 'sf-button' ) {
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="sf-inline">';
+			wp_nonce_field( 'signal_flare_tower' );
+			echo '<input type="hidden" name="action" value="signal_flare_tower"><input type="hidden" name="do" value="' . esc_attr( $do ) . '">';
+			if ( 'connect' === $do ) {
+				echo '<label class="sf-field">' . esc_html__( 'Connection code', 'signal-flare' ) . '<input type="text" name="code" required autocomplete="off" spellcheck="false" placeholder="st1.…"></label>';
+			}
+			echo '<button class="' . esc_attr( $class ) . '">' . esc_html( $label ) . '</button></form>';
+		};
+
+		if ( Reporter::connected() ) {
+			$last = $settings['last'] ?? null;
+			echo '<p>' . esc_html( sprintf( __( 'Reporting to %s every hour.', 'signal-flare' ), wp_parse_url( $settings['url'], PHP_URL_HOST ) ) ) . '</p>';
+			if ( $last ) {
+				echo '<p class="' . ( $last['ok'] ? 'sf-muted' : 'sf-warning' ) . '">' . esc_html( sprintf( __( 'Last check-in %1$s ago: %2$s', 'signal-flare' ), human_time_diff( (int) $last['time'] ), $last['ok'] ? __( 'OK', 'signal-flare' ) : $last['message'] ) ) . '</p>';
+			}
+			echo '<div class="sf-actions">';
+			$form( 'send', __( 'Check in now', 'signal-flare' ) );
+			$form( 'disconnect', __( 'Disconnect', 'signal-flare' ) );
+			echo '</div>';
+		} else {
+			echo '<p class="sf-muted">' . esc_html__( 'Report this site\'s versions, updates and health to your Signal Tower dashboard. Add the site in Signal Tower, then paste its connection code here. Works even while Signal Flare is switched off.', 'signal-flare' ) . '</p>';
+			$form( 'connect', __( 'Connect', 'signal-flare' ), 'sf-button sf-button--primary' );
+		}
+
+		echo '<h3 class="sf-subhead">' . esc_html__( 'Self-check', 'signal-flare' ) . '</h3><ul class="sf-checks">';
+		foreach ( $health['checks'] as $check ) {
+			echo '<li class="' . ( $check['ok'] ? 'sf-check--ok' : 'sf-check--fail' ) . '">' . esc_html( $check['label'] ) . '</li>';
+		}
+		echo '</ul></section>';
 	}
 
 	public static function menu(): void {
@@ -64,6 +130,11 @@ class Admin {
 		if ( isset( $_GET['saved'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			echo '<div class="sf-notice" role="status">' . esc_html__( 'Saved.', 'signal-flare' ) . '</div>';
 		}
+		$tower_notice = get_transient( 'signal_flare_tower_notice_' . get_current_user_id() );
+		if ( $tower_notice ) {
+			delete_transient( 'signal_flare_tower_notice_' . get_current_user_id() );
+			echo '<div class="sf-notice" role="status">' . esc_html( $tower_notice ) . '</div>';
+		}
 
 		echo '<div class="sf-grid">';
 
@@ -97,6 +168,8 @@ class Admin {
 		echo '<li>' . esc_html__( 'On your Mac, paste this into Terminal and press Return. When it asks, paste the password and press Return again (it stays hidden):', 'signal-flare' ) . '<pre class="sf-code">' . esc_html( $command ) . '</pre></li>';
 		echo '<li>' . esc_html__( 'Start a new Claude session. Signal Flare\'s tools appear automatically.', 'signal-flare' ) . '</li>';
 		echo '</ol><p class="sf-muted">' . esc_html__( 'To cut Claude off instantly, switch Signal Flare off or revoke the Application Password.', 'signal-flare' ) . '</p></section>';
+
+		self::render_tower();
 
 		echo '</div>';
 

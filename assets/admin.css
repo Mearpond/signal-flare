@@ -267,3 +267,58 @@
 	gap: 12px;
 	margin-top: 14px;
 }
+
+/* ---------- Signal Tower ---------- */
+
+.sf-inline {
+	display: inline-block;
+	margin: 0;
+}
+
+.sf-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.sf-field {
+	display: block;
+	margin-bottom: 10px;
+	font-weight: 500;
+	color: var(--sf-ink);
+}
+
+.sf-field input {
+	display: block;
+	width: 100%;
+	margin-top: 4px;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.sf-subhead {
+	margin: 20px 0 8px;
+	font-size: 13px;
+}
+
+.sf-checks {
+	margin: 0;
+}
+
+.sf-checks li::before {
+	display: inline-block;
+	width: 18px;
+	font-weight: 700;
+}
+
+.sf-check--ok::before {
+	content: "✓";
+	color: var(--sf-on);
+}
+
+.sf-check--fail {
+	color: #9a3a1c;
+	font-weight: 500;
+}
+
+.sf-check--fail::before {
+	content: "✕";
+}

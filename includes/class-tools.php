@@ -338,7 +338,7 @@ class Tools {
 		return Links::create_login( (string) ( $args['redirect'] ?? '' ) );
 	}
 
-	private static function find_wp_cli(): string {
+	public static function find_wp_cli(): string {
 		$candidates = array_filter( array( (string) apply_filters( 'signal_flare_wp_cli_path', '' ), '/usr/local/bin/wp', '/usr/bin/wp' ) );
 		foreach ( $candidates as $candidate ) {
 			if ( is_executable( $candidate ) ) {
