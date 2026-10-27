@@ -58,6 +58,19 @@ class Tools {
 					'required'   => array( 'args' ),
 				),
 			),
+			'create_login_link' => array(
+				'group'       => 'code',
+				'description' => 'Make a one-time link that logs a browser in as you, for testing the site in a browser. It must be opened within 2 minutes, works once, and the session lasts an hour.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'redirect' => array(
+							'type'        => 'string',
+							'description' => 'Where to land after logging in: a path on this site, e.g. "wp-admin/admin.php?page=fieldmark" or "/about/". Defaults to the dashboard.',
+						),
+					),
+				),
+			),
 			'read_file'      => array(
 				'group'       => 'files',
 				'description' => 'Read a file under the WordPress folder. Relative paths start at the WordPress root. Binary or non-UTF-8 files come back base64-encoded. Use offset/limit (in lines) for large text files.',
@@ -91,6 +104,28 @@ class Tools {
 						),
 					),
 					'required'   => array( 'path', 'content' ),
+				),
+			),
+			'create_upload_link' => array(
+				'group'       => 'files',
+				'description' => 'Make a one-time link for uploading a large file (a plugin zip, media, a database export) straight to a path on the site with curl, without passing it through this conversation. Works once, for up to 64 MB. Code files (.php and the like) are refused; use write_file for those.',
+				'inputSchema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'path'      => array(
+							'type'        => 'string',
+							'description' => 'Where the file will be saved, e.g. "wp-content/uploads/signal-flare-build/fieldmark.zip".',
+						),
+						'overwrite' => array(
+							'type'        => 'boolean',
+							'description' => 'Replace the file if it exists (default false).',
+						),
+						'minutes'   => array(
+							'type'        => 'integer',
+							'description' => 'How long the link lasts (1-60, default 10).',
+						),
+					),
+					'required'   => array( 'path' ),
 				),
 			),
 			'edit_file'      => array(
@@ -299,6 +334,10 @@ class Tools {
 		);
 	}
 
+	private static function tool_create_login_link( array $args ): array {
+		return Links::create_login( (string) ( $args['redirect'] ?? '' ) );
+	}
+
 	private static function find_wp_cli(): string {
 		$candidates = array_filter( array( (string) apply_filters( 'signal_flare_wp_cli_path', '' ), '/usr/local/bin/wp', '/usr/bin/wp' ) );
 		foreach ( $candidates as $candidate ) {
@@ -387,6 +426,10 @@ class Tools {
 			'bytes'   => strlen( $content ),
 			'created' => ! $existed,
 		);
+	}
+
+	private static function tool_create_upload_link( array $args ): array {
+		return Links::create_upload( (string) ( $args['path'] ?? '' ), ! empty( $args['overwrite'] ), (int) ( $args['minutes'] ?? 10 ) );
 	}
 
 	private static function tool_edit_file( array $args ): array {
