@@ -90,7 +90,8 @@ class Admin {
 			array( 'a' => array( 'href' => true ) )
 		) . '</li>';
 		// The password is read with a hidden prompt, so it never shows on screen or lands in shell history.
-		$command = "read -rs \"pw?Application password: \" && echo && claude mcp add --transport http --scope user signal-flare "
+		// Named after the site, so several sites can be connected side by side.
+		$command = "read -rs \"pw?Application password: \" && echo && claude mcp add --transport http --scope user " . self::connection_name() . ' '
 			. Server::url()
 			. " --header \"Authorization: Basic \$(printf '%s:%s' '" . $user->user_login . "' \"\$pw\" | base64)\"; unset pw";
 		echo '<li>' . esc_html__( 'On your Mac, paste this into Terminal and press Return. When it asks, paste the password and press Return again (it stays hidden):', 'signal-flare' ) . '<pre class="sf-code">' . esc_html( $command ) . '</pre></li>';
@@ -101,6 +102,13 @@ class Admin {
 
 		self::render_log();
 		echo '</div>';
+	}
+
+	/** e.g. "signal-flare-example-com" for https://www.example.com. */
+	private static function connection_name(): string {
+		$host = preg_replace( '/^www\./', '', (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+		$slug = trim( (string) preg_replace( '/[^a-z0-9]+/', '-', strtolower( $host ) ), '-' );
+		return 'signal-flare' . ( '' !== $slug ? '-' . $slug : '' );
 	}
 
 	private static function toggle( string $name, bool $checked, string $label, string $help ): void {

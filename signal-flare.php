@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Signal Flare
  * Description:       Connects Claude to this site over MCP so it can build and maintain it. Full access, admins only, every action logged.
- * Version:           0.2.0
+ * Version:           0.2.1
  * Requires at least: 6.5
  * Requires PHP:      8.0
  * Author:            Clint Dehner
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SIGNAL_FLARE_VERSION', '0.2.0' );
+define( 'SIGNAL_FLARE_VERSION', '0.2.1' );
 define( 'SIGNAL_FLARE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SIGNAL_FLARE_URL', plugin_dir_url( __FILE__ ) );
 
