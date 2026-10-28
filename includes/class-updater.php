@@ -4,12 +4,15 @@ namespace SignalFlare;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Updates from Signal Tower instead of wordpress.org, so "Update available"
- * shows on the Plugins page like any other plugin.
+ * Updates from Signal Tower, or from GitHub Releases, instead of wordpress.org,
+ * so "Update available" shows on the Plugins page like any other plugin.
  *
  * Every release is signed on Clint's Mac. A package is installed only if its
  * signature matches the public key below, so even a compromised update server
- * can't push code to a site.
+ * or GitHub account can't push code to a site.
+ *
+ * Given a GitHub repo, the plugin reads the latest release's release.json asset
+ * (the same fields Signal Tower serves) and downloads the zip attached to it.
  *
  * Keep this file identical in Field Mark and Signal Flare apart from the namespace.
  */
@@ -28,10 +31,24 @@ class Updater {
 	private string $slug;
 	private string $version;
 
-	public function __construct( string $file, string $slug, string $version ) {
+	/** Where release info comes from, and the prefix every package URL must have. */
+	private string $release_url;
+	private string $package_prefix;
+
+	/**
+	 * @param string|null $github_repo "owner/name" to update from GitHub Releases; null for Signal Tower.
+	 */
+	public function __construct( string $file, string $slug, string $version, ?string $github_repo = null ) {
 		$this->basename = plugin_basename( $file );
 		$this->slug     = $slug;
 		$this->version  = $version;
+		if ( $github_repo ) {
+			$this->release_url    = 'https://github.com/' . $github_repo . '/releases/latest/download/release.json';
+			$this->package_prefix = 'https://github.com/' . $github_repo . '/releases/download/';
+		} else {
+			$this->release_url    = self::SERVER . '/release/' . rawurlencode( $slug );
+			$this->package_prefix = self::SERVER . '/package/' . $slug . '/';
+		}
 	}
 
 	public function init(): void {
@@ -57,7 +74,7 @@ class Updater {
 		}
 
 		$response = wp_remote_get(
-			self::SERVER . '/release/' . rawurlencode( $this->slug ),
+			$this->release_url,
 			array(
 				'timeout' => 10,
 				'headers' => array( 'Accept' => 'application/json' ),
@@ -65,7 +82,7 @@ class Updater {
 		);
 		$release = null;
 		if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
-			$release = self::validate( json_decode( wp_remote_retrieve_body( $response ), true ), $this->slug );
+			$release = self::validate( json_decode( wp_remote_retrieve_body( $response ), true ), $this->slug, $this->package_prefix );
 		}
 		set_site_transient( $key, array( 'release' => $release ), $release ? self::CACHE_TTL : self::RETRY_TTL );
 		return $release;
@@ -75,7 +92,7 @@ class Updater {
 	 * A release is trusted only if its fields are well formed and its signature
 	 * covers this exact plugin, version and file hash.
 	 */
-	public static function validate( $data, string $slug ): ?array {
+	public static function validate( $data, string $slug, string $package_prefix ): ?array {
 		if ( ! is_array( $data ) ) {
 			return null;
 		}
@@ -87,7 +104,7 @@ class Updater {
 			|| ! preg_match( '/^\d+(\.\d+){1,3}$/', $version )
 			|| ! preg_match( '/^[a-f0-9]{64}$/', $sha256 )
 			|| false === $signature || SODIUM_CRYPTO_SIGN_BYTES !== strlen( $signature )
-			|| ! str_starts_with( $package, self::SERVER . '/' )
+			|| ! str_starts_with( $package, $package_prefix )
 			|| ! function_exists( 'sodium_crypto_sign_verify_detached' )
 		) {
 			return null;
@@ -172,7 +189,7 @@ class Updater {
 	 */
 	public function download( $reply, $package, $upgrader, $hook_extra = array() ) {
 		$ours = ( $hook_extra['plugin'] ?? '' ) === $this->basename
-			|| ( is_string( $package ) && str_starts_with( $package, self::SERVER . '/package/' . $this->slug . '/' ) );
+			|| ( is_string( $package ) && str_starts_with( $package, $this->package_prefix ) );
 		if ( false !== $reply || ! $ours ) {
 			return $reply;
 		}

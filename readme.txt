@@ -1,7 +1,7 @@
 === Signal Flare ===
 Requires at least: 6.5
 Requires PHP: 8.0
-Stable tag: 0.3.2
+Stable tag: 0.4.0
 License: GPL-2.0-or-later
 
 Connects Claude to this site over MCP so it can build and maintain it. Full access, admins only, every action logged.
@@ -25,3 +25,17 @@ To cut Claude off: switch Signal Flare off, or revoke the Application Password. 
 * Upload and login links expire within minutes and work once.
 
 Application Passwords need HTTPS. Some security plugins turn them off; Signal Flare's page warns you if so.
+
+== Updates ==
+
+New versions appear on the Plugins page. Sites connected to Signal Tower update from it; all others update from GitHub Releases. Every release is signed, and a download that doesn't match its signature is refused.
+
+== Signal Tower ==
+
+Optional and off unless you paste in a connection code. When connected, the site reports versions, updates waiting, Signal Flare's switches and its self-check once an hour. No passwords, file contents or code.
+
+== Changelog ==
+
+= 0.4.0 =
+* Updates from GitHub Releases for sites not connected to Signal Tower, with the same signature check.
+* README, SECURITY and LICENSE for the public repository.
